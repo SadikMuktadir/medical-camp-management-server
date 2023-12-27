@@ -25,17 +25,22 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-
-    const itemCollection = client.db("medicalCamp").collection("item"); 
-
+    const itemCollection = client.db("medicalCamp").collection("item");
+    const reviewCollection = client.db("medicalCamp").collection("review");
 
     // Item Collection
 
     app.get("/item", async (req, res) => {
-        const result = await itemCollection.find().toArray();
-        res.send(result);
-      });
+      const result = await itemCollection.find().toArray();
+      res.send(result);
+    });
 
+    // Review Collection
+
+    app.get("/review", async (req, res) => {
+      const result = await reviewCollection.find().toArray();
+      res.send(result);
+    });
 
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
