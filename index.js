@@ -29,6 +29,7 @@ async function run() {
     const reviewCollection = client.db("medicalCamp").collection("review");
     const registerCollection = client.db("medicalCamp").collection("info");
     const campDetailsCollection = client.db("medicalCamp").collection("camp");
+    const userCollection = client.db("medicalCamp").collection("user");
 
     // Item Collection
 
@@ -61,6 +62,12 @@ async function run() {
       const email = req.query.email;
       const query = { email: email };
       const result = await campDetailsCollection.find(query).toArray();
+      res.send(result);
+    });
+        // User Collection
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const result = await userCollection.insertOne(user);
       res.send(result);
     });
 
