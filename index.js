@@ -27,6 +27,7 @@ async function run() {
   try {
     const itemCollection = client.db("medicalCamp").collection("item");
     const reviewCollection = client.db("medicalCamp").collection("review");
+    const registerCollection = client.db("medicalCamp").collection("info");
 
     // Item Collection
 
@@ -39,6 +40,13 @@ async function run() {
 
     app.get("/review", async (req, res) => {
       const result = await reviewCollection.find().toArray();
+      res.send(result);
+    });
+
+    // Register Collection
+    app.post("/info", async (req, res) => {
+      const information = req.body;
+      const result = await registerCollection.insertOne(information);
       res.send(result);
     });
 
