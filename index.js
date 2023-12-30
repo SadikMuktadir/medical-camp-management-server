@@ -39,8 +39,27 @@ async function run() {
     });
     app.get("/item/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const result = await itemCollection.findOne(query);
+      res.send(result);
+    });
+    app.patch("/item:id", async (req, res) => {
+      const item = req.body;
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          campName: item.campName,
+          category: item.category,
+          campFees: item.campFees,
+          venueLocation: item.venueLocation,
+          targetAudience: item.targetAudience,
+          scheduleDateTime: item.scheduleDateTime,
+          specialService: item.specialService,
+          healthcareProfessional: item.healthcareProfessional
+        },
+      };
+      const result = await itemCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
     app.post("/item", async (req, res) => {
