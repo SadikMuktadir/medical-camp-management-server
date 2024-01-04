@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
+const stripe = require("stripe")(process.env.SECRET_KEY);
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -40,7 +41,7 @@ async function run() {
       });
       res.send({ token });
     });
-
+    // verify user
     const verifyToken = (req, res, next) => {
       if (!req.headers.authorization) {
         return res.status(401).send({ message: "Unauthorized Access" });
@@ -53,6 +54,19 @@ async function run() {
         req.decoded = decoded;
         next();
       });
+    };
+    // verify admin
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      const isAdmin = user?.role === "admin";
+      if (!isAdmin) {
+        return res.status(403).send({
+          message: "Forbidden Access",
+        });
+      }
+      next();
     };
 
     // Item Collection
@@ -124,13 +138,20 @@ async function run() {
       const result = await campDetailsCollection.find(query).toArray();
       res.send(result);
     });
+    app.delete("/camp/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await campDetailsCollection.deleteOne(query);
+      res.send(result);
+    });
+
     // User Collection
     app.post("/users", async (req, res) => {
       const user = req.body;
       const result = await userCollection.insertOne(user);
       res.send(result);
     });
-    app.get("/users", verifyToken, async (req, res) => {
+    app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     });
@@ -164,6 +185,23 @@ async function run() {
       };
       const result = await userCollection.updateOne(filter, updatedDoc);
       res.send(result);
+    });
+
+    // Payment collection
+
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
     });
 
     // Connect the client to the server	(optional starting in v4.7)
