@@ -5,7 +5,6 @@ require("dotenv").config();
 const stripe = require("stripe")(process.env.SECRET_KEY);
 const app = express();
 const port = process.env.PORT || 5000;
-
 //middleware
 
 app.use(cors());
@@ -32,6 +31,7 @@ async function run() {
     const registerCollection = client.db("medicalCamp").collection("info");
     const campDetailsCollection = client.db("medicalCamp").collection("camp");
     const userCollection = client.db("medicalCamp").collection("user");
+    const paymentCollection = client.db("medicalCamp").collection("payment");
 
     // JWT Connect
     app.post("/jwt", async (req, res) => {
@@ -190,8 +190,8 @@ async function run() {
     // Payment collection
 
     app.post("/create-payment-intent", async (req, res) => {
-      const { price } = req.body;
-      const amount = parseInt(price * 100);
+      const { campFees } = req.body;
+      const amount = parseInt(campFees * 100);
 
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
@@ -202,6 +202,19 @@ async function run() {
       res.send({
         clientSecret: paymentIntent.client_secret,
       });
+    });
+
+    // User Payment Data
+    app.post("/payments", async (req, res) => {
+      const payments = req.body;
+      const paymentResult = await paymentCollection.insertOne(payments);
+      const query = {
+        _id: {
+          $in: payments.itemId.map((id) => new ObjectId(id)),
+        },
+      };
+      const deleteResult = await campDetailsCollection.deleteMany(query);
+      res.send({ paymentResult, deleteResult });
     });
 
     // Connect the client to the server	(optional starting in v4.7)
