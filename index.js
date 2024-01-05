@@ -118,6 +118,11 @@ async function run() {
       const result = await reviewCollection.find().toArray();
       res.send(result);
     });
+    app.post("/review", async (req, res) => {
+      const reviewInfo = req.body;
+      const result = await reviewCollection.insertOne(reviewInfo);
+      res.send(result);
+    });
 
     // Register Collection
     app.post("/info", async (req, res) => {
@@ -218,7 +223,7 @@ async function run() {
     });
 
     // Payment
-    app.get("/payments/:email",verifyToken, async (req, res) => {
+    app.get("/payments/:email", verifyToken, async (req, res) => {
       const query = { email: req.params.email };
       // if (req.params.email !== req.decoded.email) {
       //   return res.status(403).send({ message: "forbidden access" });
